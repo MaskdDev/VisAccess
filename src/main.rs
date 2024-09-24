@@ -58,7 +58,7 @@ async fn main() {
     let token = env::var("token").expect("Expected a token in the environment");
 
     // Set intents
-    let intents = GatewayIntents::all();
+    let intents = GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT;
 
     // Build client
     let mut client = Client::builder(token, intents)
