@@ -66,9 +66,6 @@ async fn main() {
         .await
         .expect("Error creating client.");
 
-    // Set messages cache
-    client.cache.set_max_messages(100);
-
     // Start client
     if let Err(why) = client.start().await {
         println!("Client error: {why:?}");
