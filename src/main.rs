@@ -11,8 +11,15 @@ struct Handler;
 #[async_trait]
 impl EventHandler for Handler {
     // On ready event
-    async fn ready(&self, _: Context, ready: Ready) {
+    async fn ready(&self, ctx: Context, ready: Ready) {
+        // Send connected message
         println!("{} is connected!", ready.user.name);
+
+        // Set bot presence
+        ctx.shard.set_presence(
+            Some(serenity::ActivityData::listening("Image IDs!")),
+            serenity::OnlineStatus::Idle,
+        );
     }
 
     // On message event
