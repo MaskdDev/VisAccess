@@ -19,7 +19,12 @@ impl EventHandler for Handler {
     async fn message(&self, _ctx: Context, msg: Message) {
         if msg.attachments.len() > 0 {
             for attachment in msg.attachments.clone() {
-                if attachment.content_type.unwrap().starts_with("image") {
+                // Get content type
+                let content_type = attachment.content_type.unwrap_or("none".to_string());
+
+                // Check attachment type
+                if content_type.starts_with("image") && content_type.starts_with("image/gif").not()
+                {
                     match attachment.description {
                         Some(_) => {}
                         None => {
