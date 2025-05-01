@@ -1,70 +1,67 @@
 use poise::serenity_prelude as serenity;
-use serenity::async_trait;
-use serenity::model::channel::Message;
-use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 use std::env;
-use std::ops::Not;
 
-struct Handler;
+// Import modules
+mod commands;
+mod database;
+mod helpers;
+mod listeners;
+mod structs;
+mod types;
 
-#[async_trait]
-impl EventHandler for Handler {
-    // On ready event
-    async fn ready(&self, ctx: Context, ready: Ready) {
-        // Send connected message
-        println!("{} is connected!", ready.user.name);
-
-        // Set bot presence
-        ctx.shard.set_presence(
-            Some(serenity::ActivityData::listening("Image IDs!")),
-            serenity::OnlineStatus::Idle,
-        );
-    }
-
-    // On message event
-    async fn message(&self, _ctx: Context, msg: Message) {
-        if msg.attachments.len() > 0 {
-            for attachment in msg.attachments.clone() {
-                // Get content type
-                let content_type = attachment.content_type.unwrap_or("none".to_string());
-
-                // Check attachment type
-                if content_type.starts_with("image") && content_type.starts_with("image/gif").not()
-                {
-                    match attachment.description {
-                        Some(_) => {}
-                        None => {
-                            // Check for ID in text
-                            if msg.content.to_ascii_lowercase().contains("id").not() {
-                                msg.reply(
-                                    _ctx.http(),
-                                    "You haven't added an image ID to this image! For more information on image and video IDs, check out this message in our rules: https://discord.com/channels/1247088652656312360/1247088653558353963/1262346544603201557.",
-                                )
-                                .await
-                                .expect("Error replying to message.");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+// Re-export types
+pub use database::Database;
+pub use types::{ClientData, Context, Error, PoiseCommand};
 
 #[tokio::main]
 async fn main() {
     // Get token from environment
-    let token = env::var("token").expect("Expected a token in the environment");
+    let token = env::var("token").expect("Expected a token in the environment.");
 
     // Set intents
     let intents = GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT;
 
-    // Build client
-    let mut client = Client::builder(token, intents)
-        .event_handler(Handler)
+    // Create bot framework
+    let framework = poise::Framework::builder()
+        .options(poise::FrameworkOptions {
+            commands: commands::get_commands(),
+            ..Default::default()
+        })
+        .setup(|ctx, _ready, framework| {
+            Box::pin(async move {
+                poise::builtins::register_globally(ctx, &framework.options().commands)
+                    .await
+                    .expect("Error registering commands.");
+                Ok(ClientData {})
+            })
+        })
+        .build();
+
+    // Create serenity client
+    let mut client = serenity::ClientBuilder::new(token, intents)
+        .event_handler(listeners::Handler)
+        .framework(framework)
         .await
         .expect("Error creating client.");
+
+    // Get Redis URL
+    let redis_url = env::var("redis_url").expect("Expected a Redis URL in the environment.");
+
+    // Open Redis client
+    let redis_client = redis::Client::open(redis_url).expect("Error connecting to Redis.");
+
+    // Open Redis connection
+    let connection = redis_client
+        .get_multiplexed_async_connection()
+        .await
+        .expect("Error creating Redis connection.");
+
+    // Create database
+    let database = Database::from_connection(connection);
+
+    // Move database into client data
+    client.data.write().await.insert::<Database>(database);
 
     // Start client
     if let Err(why) = client.start().await {
