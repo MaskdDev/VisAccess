@@ -38,7 +38,9 @@ impl EventHandler for Handler {
         if no_id > 0 {
             // Pick message based on the number of attachments without an ID
             let reply = if no_id == total_id {
-                String::from("You haven't added image IDs to any of these images! For more information on image and video IDs, check out this message in our rules: https://discord.com/channels/1247088652656312360/1247088653558353963/1262346544603201557.")
+                "You haven't added image IDs to any of these images! For more information on image and video IDs, check out this message in our rules: https://discord.com/channels/1247088652656312360/1247088653558353963/1262346544603201557.".to_string()
+            } else if no_id == 1 {
+                "You haven't added an image ID to this image! For more information on image and video IDs, check out this message in our rules: https://discord.com/channels/1247088652656312360/1247088653558353963/1262346544603201557.".to_string()
             } else {
                 format!("You haven't added an image ID to {} of these images! For more information on image and video IDs, check out this message in our rules: https://discord.com/channels/1247088652656312360/1247088653558353963/1262346544603201557.", no_id)
             };
