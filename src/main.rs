@@ -11,8 +11,9 @@ struct Handler;
 impl EventHandler for Handler {
     // The message event, run whenever a message is sent.
     async fn message(&self, ctx: Context, message: Message) {
-        // The number of valid attachments without an ID
+        // Initialise counters for attachments
         let mut no_id = 0;
+        let mut total_id = 0;
 
         // Iterate over all attachments
         for attachment in message.attachments.clone() {
@@ -21,6 +22,9 @@ impl EventHandler for Handler {
 
             // Check if the attachment is an image, but not a gif
             if content_type.starts_with("image") && !content_type.starts_with("image/gif") {
+                // Increment total ID-able
+                total_id += 1;
+
                 // Check for the lack of an ID
                 if !(attachment.description.is_some()
                     || message.content.to_ascii_lowercase().contains("id:"))
@@ -30,24 +34,20 @@ impl EventHandler for Handler {
             }
         }
 
-        // Get number of attachments
-        let attachment_count = message.attachments.len();
-
         // Check if any attachments don't have an ID
-        let reply = if (no_id > 0 && no_id < attachment_count) {
-            Some(format!("You haven't added an image ID to {} of these images! For more information on image and video IDs, check out this message in our rules: https://discord.com/channels/1247088652656312360/1247088653558353963/1262346544603201557.", no_id))
-        } else if (no_id == attachment_count) {
-            Some(String::from("You haven't added image IDs to any of these images! For more information on image and video IDs, check out this message in our rules: https://discord.com/channels/1247088652656312360/1247088653558353963/1262346544603201557."))
-        } else {
-            None
-        };
+        if no_id > 0 {
+            // Pick message based on the number of attachments without an ID
+            let reply = if no_id == total_id {
+                String::from("You haven't added image IDs to any of these images! For more information on image and video IDs, check out this message in our rules: https://discord.com/channels/1247088652656312360/1247088653558353963/1262346544603201557.")
+            } else {
+                format!("You haven't added an image ID to {} of these images! For more information on image and video IDs, check out this message in our rules: https://discord.com/channels/1247088652656312360/1247088653558353963/1262346544603201557.", no_id)
+            };
 
-        // Send message, if any attachments don't have an ID
-        if let Some(reply) = reply {
-            message
-                .reply(ctx, reply)
-                .await
-                .expect("Could not reply to a message without IDs.");
+            // Send message in reply to the offending message
+            message.reply(ctx, reply).await.expect(&format!(
+                "Could not reply to a message with ID: {}.",
+                message.id
+            ));
         }
     }
 
