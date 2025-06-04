@@ -15,6 +15,6 @@ The following environment variables can be set:
 - `SINGULAR_MESSAGE`: The message you'd like to send when a single image in a message doesn't have a description.
 
 ### Railway
-You can also use the provided railway template below to deploy VisAccess with ease. All configuration options are documented within the template.
+You can also use the provided railway template below to deploy VisAccess with ease. All configuration options are documented within the template. I may earn a small commision if you haven't already created a railway account below, so thank you! If you'd like to use a link without a referral code, click [here](https://railway.com/deploy/xDdTf6).
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/xDdTf6?referralCode=maskddev)
