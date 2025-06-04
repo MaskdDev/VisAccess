@@ -14,6 +14,8 @@ The following environment variables can be set:
 - `SOME_MESSAGE`: The message you'd like to send when some images in a message don't have a description. %n will be replaced with the number of images without a description in the message.
 - `SINGULAR_MESSAGE`: The message you'd like to send when a single image in a message doesn't have a description.
 
+The discord bot running VisAccess must have the "Message Content" intent, and should be able to view channels you want it to flag messages in.
+
 ### Railway
 You can also use the provided railway template below to deploy VisAccess with ease. All configuration options are documented within the template. I may earn a small commision if you haven't already created a railway account below, so thank you! If you'd like to use a link without a referral code, click [here](https://railway.com/deploy/xDdTf6).
 
